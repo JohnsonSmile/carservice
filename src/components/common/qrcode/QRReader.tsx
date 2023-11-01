@@ -59,7 +59,7 @@ const QRReader = ({ open, onOpenChange }: QRReaderProps) => {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-screen h-screen p-0" onCancel={() => onOpenChange(false)}>
+        <DialogContent className="w-screen min-h-screen px-0" onCancel={() => onOpenChange(false)}>
           {/* <DialogHeader>
             <DialogTitle>Edit profile</DialogTitle>
             <DialogDescription>
