@@ -6,7 +6,7 @@ const HighwayPage = () => {
 
   return (
     <div>
-      <QRReader />
+      {/* <QRReader /> */}
     </div>
   )
 }

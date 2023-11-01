@@ -1,9 +1,15 @@
 "use client"
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { setDefaultResultOrder } from 'dns';
 import QrScanner from 'qr-scanner';
 import { LegacyRef, MutableRefObject, useEffect, useRef, useState } from 'react';
 
-const QRReader = () => {
+interface QRReaderProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+const QRReader = ({ open, onOpenChange }: QRReaderProps) => {
   const [data, setData] = useState('No result');
 
   const [file, setFile] = useState<File | null>(null)
@@ -41,6 +47,7 @@ const QRReader = () => {
       highlightCodeOutline: true,
     })
     setScanner(s)
+    s.start().catch(alert)
     // cleanup function when component will unmount
     return () => {
       setScanner(null)
@@ -51,14 +58,24 @@ const QRReader = () => {
 
   return (
     <>
-      <button onClick={handleClick}>Scan QR Code</button>
-      <button onClick={handleStart}>Start</button>
-      {cameras.map(camera => (<div key={camera.id} onClick={() => handleCameraSelected(camera.id)}>{camera.label}</div>))}
-      <div className='mt-4'>
-        <div className=''>
-          <video id="qr-video" ref={videoRef} className='w-full h-full'></video>
-        </div>
-      </div>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="w-screen h-screen">
+          {/* <DialogHeader>
+            <DialogTitle>Edit profile</DialogTitle>
+            <DialogDescription>
+              Make changes to your profile here. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader> */}
+          {/* <button onClick={handleClick}>Scan QR Code</button>
+      <button onClick={handleStart}>Start</button> */}
+          {/* {cameras.map(camera => (<div key={camera.id} onClick={() => handleCameraSelected(camera.id)}>{camera.label}</div>))} */}
+          {/* <div className='mt-4'> */}
+          <div className=''>
+            <video id="qr-video" ref={videoRef} className='w-full h-full'></video>
+          </div>
+          {/* </div> */}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
