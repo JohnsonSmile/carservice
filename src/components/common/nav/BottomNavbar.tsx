@@ -57,7 +57,7 @@ const BottomNavbar = () => {
   const pathname = usePathname()
   return (
     <div className="fixed z-50 w-full h-16 max-w-lg -translate-x-1/2 bg-white border-t border-gray-200 bottom-0 left-1/2 dark:bg-gray-700 dark:border-gray-600 shadow-md">
-      <div className="grid h-full max-w-lg grid-cols-5 mx-auto">
+      <div className="grid h-full w-full max-w-lg grid-cols-5 mx-auto">
         {navItems.map((item) => item.type === 0 ? <BarItem key={item.title} icon={item.icon} title={item.title} href={item.href} active={pathname.startsWith(item.href)} /> : <PlusBarItem key={item.title} />)}
       </div>
     </div>

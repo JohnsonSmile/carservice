@@ -71,7 +71,7 @@ const QRReader = ({ open, onOpenChange }: QRReaderProps) => {
           {/* {cameras.map(camera => (<div key={camera.id} onClick={() => handleCameraSelected(camera.id)}>{camera.label}</div>))} */}
           {/* <div className='mt-4'> */}
           <div className=''>
-            <video id="qr-video" ref={videoRef} className='w-full h-full'></video>
+            <video id="qr-video" ref={videoRef} className='w-full h-full'/>
           </div>
           {/* </div> */}
         </DialogContent>

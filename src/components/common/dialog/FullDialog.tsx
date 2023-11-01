@@ -46,11 +46,11 @@ const DialogContent = React.forwardRef<
       )}
       {...props}
     >
-      <div className='h-11 w-full fixed border-b shadow-md z-50'>
+      {children}
+      <div className='h-11 w-full fixed border-b shadow-md z-50 bg-white'>
         <div className="absolute top-1/2 left-2 -translate-y-1/2 cursor-pointer" onClick={props.onCancel}>取消</div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">扫描二维码</div>
       </div>
-      {children}
     </DialogPrimitive.Content>
   </DialogPortal>
 ))
