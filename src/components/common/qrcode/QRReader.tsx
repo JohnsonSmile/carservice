@@ -1,8 +1,8 @@
 "use client"
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { setDefaultResultOrder } from 'dns';
 import QrScanner from 'qr-scanner';
 import { LegacyRef, MutableRefObject, useEffect, useRef, useState } from 'react';
+import { Dialog, DialogContent } from '../dialog/FullDialog';
 
 interface QRReaderProps {
   open: boolean
@@ -59,7 +59,7 @@ const QRReader = ({ open, onOpenChange }: QRReaderProps) => {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-screen h-screen">
+        <DialogContent className="w-screen h-screen p-0" onCancel={() => onOpenChange(false)}>
           {/* <DialogHeader>
             <DialogTitle>Edit profile</DialogTitle>
             <DialogDescription>
