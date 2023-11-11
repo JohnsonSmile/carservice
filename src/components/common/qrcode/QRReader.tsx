@@ -1,8 +1,9 @@
 "use client"
-import { setDefaultResultOrder } from 'dns';
-import QrScanner from 'qr-scanner';
-import { LegacyRef, MutableRefObject, useEffect, useRef, useState } from 'react';
-import { Dialog, DialogContent } from '../dialog/FullDialog';
+import { setDefaultResultOrder } from "dns"
+import QrScanner from "qr-scanner"
+import { LegacyRef, MutableRefObject, useEffect, useRef, useState } from "react"
+import { Dialog, DialogContent } from "../dialog/FullDialog"
+import { useToaster } from "../toaster/Toaster"
 
 interface QRReaderProps {
   open: boolean
@@ -10,7 +11,8 @@ interface QRReaderProps {
 }
 
 const QRReader = ({ open, onOpenChange }: QRReaderProps) => {
-  const [data, setData] = useState('No result');
+  const toast = useToaster()
+  const [data, setData] = useState("No result")
 
   const [file, setFile] = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement | null>(null)
@@ -19,7 +21,7 @@ const QRReader = ({ open, onOpenChange }: QRReaderProps) => {
   const [cameras, setCameras] = useState<QrScanner.Camera[]>([])
 
   const handleClick = () => {
-    QrScanner.listCameras(true).then(setCameras).catch(alert);
+    QrScanner.listCameras(true).then(setCameras).catch(alert)
   }
 
   const handleCameraSelected = (id: string) => {
@@ -33,33 +35,74 @@ const QRReader = ({ open, onOpenChange }: QRReaderProps) => {
     }
   }
 
-  useEffect(() => {
+  // car:highway:(base64(rsa(cityid:regionid:placeid)))
+  // car:charge:(base64(rsa(cityid:regionid:placeid)))
+  // car:park:(base64(rsa(cityid:regionid:placeid)))
 
+  useEffect(() => {
     // when component mounts
-    const s = new QrScanner(videoRef.current!, result => {
-      // setResult(result)
-      console.log(result)
-    }, {
-      onDecodeError: error => {
-        console.log(error)
+    const s = new QrScanner(
+      videoRef.current!,
+      (result) => {
+        // setResult(result)
+        console.log(result)
+        const sections = result.data.split(":")
+        console.log(sections)
+        if (sections.length !== 3) {
+          // unsupport qrcode
+          return
+        }
+        if (sections[0] !== "car") {
+          // unsupport qrcode
+          return
+        }
+        // action should be one of (highway,charge,park)
+        const action = sections[1]
+        switch (action) {
+          case "highway":
+            // quest for highway
+            toast.success("highway")
+            break
+
+          case "charge":
+            // quest for charge
+            toast.success("charge")
+            break
+
+          case "park":
+            // quest for park
+            toast.success("park")
+            break
+          default:
+            // unsupport qrcode
+            return
+        }
       },
-      highlightScanRegion: true,
-      highlightCodeOutline: true,
-    })
+      {
+        maxScansPerSecond: 1,
+        onDecodeError: (error) => {
+          console.log(error)
+        },
+        highlightScanRegion: true,
+        highlightCodeOutline: true,
+      }
+    )
     setScanner(s)
     s.start().catch(alert)
     // cleanup function when component will unmount
     return () => {
       setScanner(null)
       s.destroy()
-    };
+    }
   }, [])
-
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-screen min-h-screen px-0" onCancel={() => onOpenChange(false)}>
+        <DialogContent
+          className="w-screen min-h-screen px-0"
+          onCancel={() => onOpenChange(false)}
+        >
           {/* <DialogHeader>
             <DialogTitle>Edit profile</DialogTitle>
             <DialogDescription>
@@ -70,18 +113,17 @@ const QRReader = ({ open, onOpenChange }: QRReaderProps) => {
       <button onClick={handleStart}>Start</button> */}
           {/* {cameras.map(camera => (<div key={camera.id} onClick={() => handleCameraSelected(camera.id)}>{camera.label}</div>))} */}
           {/* <div className='mt-4'> */}
-          <div className=''>
-            <video id="qr-video" ref={videoRef} className='w-full h-full'/>
+          <div className="">
+            <video id="qr-video" ref={videoRef} className="w-full h-full" />
           </div>
           {/* </div> */}
         </DialogContent>
       </Dialog>
     </>
-  );
-};
+  )
+}
 
 export default QRReader
-
 
 /*
 const qrcodeRegionId = "html5qr-code-full-region";
