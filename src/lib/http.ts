@@ -12,9 +12,9 @@ const instance = axios.create({
 instance.interceptors.request.use(
   (config) => {
     // If token is present add it to request's Authorization Header
-    if (localStorage?.getItem("synctoken")) {
+    if (localStorage?.getItem("car-token")) {
       try {
-        const accessToken = localStorage?.getItem("synctoken") || ""
+        const accessToken = localStorage?.getItem("car-token") || ""
         // eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2OTUwNjgxNjMsInVzZXJfaWQiOiI2NTA4MWZiYjA4ZTVhZWQzMjA2ZDY5OWQiLCJhZGRyZXNzIjoiMHhmMzlGZDZlNTFhYWQ4OEY2RjRjZTZhQjg4MjcyNzljZmZGYjkyMjY2IiwiZXhwaXJhdGlvbl90aW1lIjoxNjk1MDY4MTYzfQ.c7pjzCVSZZ0i-snZkWJosUdFyxMQL8zwmghALZlren0
         if (config.headers)
           config.headers.Authorization = "Bearer " + accessToken
