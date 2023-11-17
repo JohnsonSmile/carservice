@@ -1,111 +1,235 @@
 "use client"
 
+import instance from "@/lib/http"
+import { useInfiniteQuery } from "@tanstack/react-query"
+import { useEffect, useMemo } from "react"
+import { useInView } from "react-intersection-observer"
+import moment from "moment"
+import { Order } from "@/hooks/http/order"
+import { cn } from "@/lib/utils"
+
 const HighwayPage = () => {
+  const { ref, inView } = useInView()
+  const {
+    status,
+    data,
+    error,
+    isFetching,
+    isFetchingNextPage,
+    isFetchingPreviousPage,
+    fetchNextPage,
+    fetchPreviousPage,
+    hasNextPage,
+    hasPreviousPage,
+  } = useInfiniteQuery({
+    queryKey: ["projects"],
+    queryFn: async ({ pageParam = 1 }) => {
+      const size = 5
+      const res = await instance.get(
+        `/highway/orders?page=${pageParam}&size=${size}`
+      )
+      return res.data
+    },
+    getNextPageParam: (lastPage) => lastPage.nextId ?? undefined,
+    getPreviousPageParam: (firstPage) => firstPage.previousId ?? undefined,
+    initialPageParam: 1,
+  })
+
+  useEffect(() => {
+    if (inView) {
+      fetchNextPage()
+    }
+  }, [inView])
+
+  const orders = useMemo(() => {
+    if (!data?.pages) {
+      return []
+    }
+    // code: 200
+    // data: {orders: Array(1), total: 1}
+    // msg: "success"
+    const result: {
+      dateStr: string
+      orders: Order[]
+    }[] = []
+    if (data.pages.length > 0) {
+      data.pages.forEach((page) => {
+        if (page.data && page.data.orders && page.data.orders.length > 0) {
+          page.data.orders.forEach((order: any) => {
+            const dateStr = moment(order.start_at).format("YYYY-MM-DD")
+            console.log(dateStr)
+            if (
+              result.length > 0 &&
+              result[result.length - 1].dateStr === dateStr
+            ) {
+              result[result.length - 1].orders.push({
+                id: order.id,
+                order_sn: order.order_sn,
+                order_status: order.order_status,
+                order_type: order.order_type_id,
+                start_at: order.start_at
+                  ? moment(order.start_at).format("YYYY-MM-DD hh:mm:ss")
+                  : "-",
+                end_at: order.end_at
+                  ? moment(order.end_at).format("YYYY-MM-DD hh:mm:ss")
+                  : "-",
+                start_position: order.start_position.name,
+                end_position: order.end_position.name,
+                fee: order.fee,
+                user_id: order.user_id,
+              })
+            } else {
+              result.push({
+                dateStr,
+                orders: [
+                  {
+                    id: order.id,
+                    order_sn: order.order_sn,
+                    order_status: order.order_status,
+                    order_type: order.order_type_id,
+                    start_at: order.start_at
+                      ? moment(order.start_at).format("YYYY-MM-DD hh:mm:ss")
+                      : "-",
+                    end_at: order.end_at
+                      ? moment(order.end_at).format("YYYY-MM-DD hh:mm:ss")
+                      : "-",
+                    start_position: order.start_position.name,
+                    end_position: order.end_position.name,
+                    fee: order.fee,
+                    user_id: order.user_id,
+                  },
+                ],
+              })
+            }
+          })
+        }
+      })
+    }
+    return result
+  }, [data])
+
+  console.log({ orders })
+
+  const handleClick = (order_status: number) => {
+    if (order_status === 2) {
+      // order_status === 2 payed
+      // 已经支付了，就不做任何响应
+      return
+    }
+    // order_status === 0 start
+    // 点击打开二维码，来end当前order
+
+    // order_status === 1 end
+    // 点击来支付当前order
+  }
+
   return (
     <div className="px-6 pb-20 text-sm">
       <div>
-        <div className="shadow-md w-full rounded-md bg-white py-2 px-4 mt-2">
-          日期：2023-11-12
-        </div>
-        <div className="shadow-md w-full rounded-md mt-2 p-4 bg-white flex flex-col gap-2">
-          <div className="flex justify-between items-center">
-            <span>起始收费站:</span>
-            <span>尖沙咀</span>
+        {/* <button
+          onClick={() => fetchPreviousPage()}
+          disabled={!hasPreviousPage || isFetchingPreviousPage}
+        >
+          {isFetchingPreviousPage
+            ? "Loading more..."
+            : hasPreviousPage
+            ? "Load Older"
+            : "Nothing more to load"}
+        </button> */}
+        {orders.map((order) => (
+          <div key={order.dateStr}>
+            <div className="shadow-md w-full rounded-md bg-white py-2 px-4 h-9 mt-2">
+              日期：{order.dateStr}
+            </div>
+            {order.orders.map((order: Order) => (
+              <div
+                key={order.id}
+                className="shadow-md w-full rounded-md mt-2 p-4 bg-white flex flex-col gap-2"
+              >
+                <div className="flex justify-between items-center">
+                  <span>起始收费站:</span>
+                  <span>{order.start_position}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>结束收费站:</span>
+                  <span>{order.end_position || "-"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>单号:</span>
+                  <span>{order.order_sn || "-"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>状态:</span>
+                  {/* TODO: status */}
+                  <span
+                    className={
+                      order.order_status === 0
+                        ? "text-orange-400" // start
+                        : order.order_status === 1
+                        ? "text-red-500" // end
+                        : "text-green-500" // payed
+                    }
+                  >
+                    {/* 0-start;1-end;2-payed */}
+                    {
+                      order.order_status === 0
+                        ? "行驶中" // start
+                        : order.order_status === 1
+                        ? "未支付" // end
+                        : "已支付" // payed
+                    }
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>价格:</span>
+                  <span>{order.fee}元</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>开始时间:</span>
+                  <span>{order.start_at}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>结束时间:</span>
+                  <span>{order.end_at}</span>
+                </div>
+                {/* TODO: status */}
+                <div
+                  className={cn(
+                    "mt-4 w-full text-center py-2 text-white rounded-md",
+                    {
+                      "bg-orange-400 text-white": order.order_status === 0,
+                      "bg-green-500 text-white": order.order_status === 1,
+                      "bg-gray-100 text-black/70": order.order_status === 2,
+                      "cursor-pointer": order.order_status !== 2,
+                    }
+                  )}
+                  onClick={() => handleClick(order.order_status)}
+                >
+                  {
+                    order.order_status === 0
+                      ? "下高速" // start
+                      : order.order_status === 1
+                      ? "使用数字人民币支付" // end
+                      : "已支付" // payed
+                  }
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="flex justify-between items-center">
-            <span>结束收费站:</span>
-            <span>深圳湾</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>单号:</span>
-            <span>ETC202311110911123456</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>状态:</span>
-            <span className="text-red-500">未支付</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>价格:</span>
-            <span>33.50元</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>开始时间:</span>
-            <span>2023-11-12 09:11:30</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>结束时间:</span>
-            <span>2023-11-12 12:12:10</span>
-          </div>
-          <div className="mt-4 w-full text-center py-2 bg-green-500 text-white rounded-md">
-            使用数字人民币支付
-          </div>
-        </div>
-        <div className="shadow-md w-full rounded-md mt-2 p-4 bg-white flex flex-col gap-2">
-          <div className="flex justify-between items-center">
-            <span>起始收费站:</span>
-            <span>尖沙咀</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>结束收费站:</span>
-            <span>深圳湾</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>单号:</span>
-            <span>ETC202311110610123451</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>状态:</span>
-            <span className="text-green-500">已支付</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>价格:</span>
-            <span>45.20元</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>开始时间:</span>
-            <span>2023-11-12 06:11:30</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>结束时间:</span>
-            <span>2023-11-12 07:12:10</span>
-          </div>
-          <div className="mt-4 w-full text-center py-2 bg-gray-100 text-black/70 rounded-md">
-            已支付
-          </div>
-        </div>
-        <div className="shadow-md w-full rounded-md mt-2 p-4 bg-white flex flex-col gap-2">
-          <div className="flex justify-between items-center">
-            <span>起始收费站:</span>
-            <span>尖沙咀</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>结束收费站:</span>
-            <span>-</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>单号:</span>
-            <span>ETC202311110610123451</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>状态:</span>
-            <span className="text-orange-400">行驶中</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>价格:</span>
-            <span>-</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>开始时间:</span>
-            <span>2023-11-12 06:11:30</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>结束时间:</span>
-            <span>-</span>
-          </div>
-          <div className="mt-4 w-full text-center py-2 bg-orange-400 text-white rounded-md">
-            下高速
-          </div>
-        </div>
+        ))}
+        <button
+          ref={ref}
+          onClick={() => fetchNextPage()}
+          disabled={!hasNextPage || isFetchingNextPage}
+          className="w-full py-2"
+        >
+          {isFetchingNextPage
+            ? "加载更多"
+            : hasNextPage
+            ? "加载最新"
+            : "我是有底线的"}
+        </button>
+        <div>{isFetching && !isFetchingNextPage ? "更新中..." : null}</div>
       </div>
     </div>
   )

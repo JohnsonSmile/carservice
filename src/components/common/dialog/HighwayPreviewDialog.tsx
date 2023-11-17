@@ -7,12 +7,16 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { HighWayPreviewData } from "@/hooks/http/order"
 import { cn } from "@/lib/utils"
 import { Dialog } from "@radix-ui/react-dialog"
+import loadash from "lodash"
+import moment from "moment"
 
 interface HighwayPreviewDialogProps {
   isLoading: boolean
   open: boolean
   highwayPreviewData?: HighWayPreviewData
+  error?: string
   onOpenChange: (open: boolean) => void
+  confirmClick: () => void
 }
 
 export const HighwayPreviewDialog = ({
@@ -20,6 +24,8 @@ export const HighwayPreviewDialog = ({
   open,
   onOpenChange,
   highwayPreviewData,
+  error,
+  confirmClick,
 }: HighwayPreviewDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -36,21 +42,19 @@ export const HighwayPreviewDialog = ({
               {isLoading ? (
                 <Skeleton className="w-24 h-5" />
               ) : (
-                <span>{highwayPreviewData?.start_at || "-"}</span>
+                <span>{highwayPreviewData?.start_positon || "-"}</span>
               )}
             </div>
             <div className="flex justify-between items-center">
               <span>结束收费站:</span>
-              {/* <span>深圳湾</span> */}
               {isLoading ? (
                 <Skeleton className="w-24 h-5" />
               ) : (
-                <span>{highwayPreviewData?.end_at || "-"}</span>
+                <span>{highwayPreviewData?.end_positon || "-"}</span>
               )}
             </div>
             <div className="flex justify-between items-center">
               <span>单号:</span>
-              {/* <span>ETC202311110911123456</span> */}
               {isLoading ? (
                 <Skeleton className="w-44 h-5" />
               ) : (
@@ -59,31 +63,26 @@ export const HighwayPreviewDialog = ({
             </div>
             <div className="flex justify-between items-center">
               <span>状态:</span>
-              {/* <span className="text-red-500">未支付</span> */}
               {isLoading ? (
                 <Skeleton className="w-24 h-5" />
               ) : (
                 <span
                   className={
-                    highwayPreviewData && highwayPreviewData?.status
-                      ? highwayPreviewData?.status === 0
-                        ? "text-orange-400"
-                        : highwayPreviewData?.status === 1
-                        ? "text-red-500"
-                        : highwayPreviewData?.status === 2
-                        ? "text-green-500"
-                        : "text-cyan-500"
+                    highwayPreviewData && highwayPreviewData?.status === 0
+                      ? "text-orange-400"
+                      : highwayPreviewData?.status === 1
+                      ? "text-red-500"
+                      : highwayPreviewData?.status === 2
+                      ? "text-green-500"
                       : "text-cyan-500"
                   }
                 >
-                  {highwayPreviewData && highwayPreviewData?.status
-                    ? highwayPreviewData?.status === 0
-                      ? "行驶中"
-                      : highwayPreviewData?.status === 1
-                      ? "未支付"
-                      : highwayPreviewData?.status === 2
-                      ? "已支付"
-                      : "未创建"
+                  {highwayPreviewData && highwayPreviewData?.status === 0
+                    ? "行驶中"
+                    : highwayPreviewData?.status === 1
+                    ? "未支付"
+                    : highwayPreviewData?.status === 2
+                    ? "已支付"
                     : "未创建"}
                 </span>
               )}
@@ -96,51 +95,58 @@ export const HighwayPreviewDialog = ({
               ) : (
                 <span>
                   {highwayPreviewData?.price
-                    ? highwayPreviewData?.price + "元"
+                    ? loadash.round(highwayPreviewData.price / 100, 2) + "元"
                     : "-"}
                 </span>
               )}
             </div>
             <div className="flex justify-between items-center">
               <span>开始时间:</span>
-              {/* <span>2023-11-12 09:11:30</span> */}
               {isLoading ? (
                 <Skeleton className="w-36 h-5" />
               ) : (
-                <span>{highwayPreviewData?.start_at || "-"}</span>
+                <span>
+                  {highwayPreviewData?.start_at
+                    ? moment(highwayPreviewData.start_at).format(
+                        "YYYY-MM-DD hh:mm:ss"
+                      )
+                    : "-"}
+                </span>
               )}
             </div>
             <div className="flex justify-between items-center">
               <span>结束时间:</span>
-              {/* <span>2023-11-12 12:12:10</span> */}
               {isLoading ? (
                 <Skeleton className="w-36 h-5" />
               ) : (
-                <span>{highwayPreviewData?.end_at || "-"}</span>
+                <span>
+                  {highwayPreviewData?.end_at
+                    ? moment(highwayPreviewData.end_at).format(
+                        "YYYY-MM-DD hh:mm:ss"
+                      )
+                    : "-"}
+                </span>
               )}
             </div>
             <div
               className={cn(
                 "mt-4 w-full text-center py-2 bg-cyan-500 text-white rounded-md",
-                highwayPreviewData && highwayPreviewData?.status
-                  ? highwayPreviewData?.status === 0
-                    ? "bg-orange-400"
-                    : highwayPreviewData?.status === 1
-                    ? "bg-green-500"
-                    : highwayPreviewData?.status === 2
-                    ? "" // TODO: 已支付
-                    : "bg-cyan-500"
+                highwayPreviewData && highwayPreviewData?.status === 0
+                  ? "bg-orange-400"
+                  : highwayPreviewData?.status === 1
+                  ? "bg-green-500"
+                  : highwayPreviewData?.status === 2
+                  ? "" // TODO: 已支付
                   : "bg-cyan-500"
               )}
+              onClick={confirmClick}
             >
-              {highwayPreviewData && highwayPreviewData?.status
-                ? highwayPreviewData?.status === 0
-                  ? "下高速"
-                  : highwayPreviewData?.status === 1
-                  ? "使用数字人民币支付"
-                  : highwayPreviewData?.status === 2
-                  ? "已支付"
-                  : "上高速"
+              {highwayPreviewData && highwayPreviewData?.status === 0
+                ? "下高速"
+                : highwayPreviewData?.status === 1
+                ? "使用数字人民币支付"
+                : highwayPreviewData?.status === 2
+                ? "已支付"
                 : "上高速"}
             </div>
             {/* <div className="mt-4 w-full text-center py-2 bg-green-500 text-white rounded-md">

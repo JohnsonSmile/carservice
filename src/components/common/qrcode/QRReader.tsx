@@ -47,23 +47,28 @@ const QRReader = ({ open, onOpenChange, onResult }: QRReaderProps) => {
         const data = sections[3]
         switch (type) {
           case "highway":
+            scanner?.destroy()
             // quest for highway
             if (action === "start") {
-              // start highway
-              onResult({
-                action,
-                data,
-                type,
-              })
-              onOpenChange(false)
+              if (open) {
+                // start highway
+                onResult({
+                  action,
+                  data,
+                  type,
+                })
+                onOpenChange(false)
+              }
             } else if (action === "end") {
-              // end highway
-              onResult({
-                action,
-                data,
-                type,
-              })
-              onOpenChange(false)
+              if (open) {
+                // end highway
+                onResult({
+                  action,
+                  data,
+                  type,
+                })
+                onOpenChange(false)
+              }
             } else {
               toast.error("不支持的二维码类型：" + result)
             }
@@ -72,21 +77,26 @@ const QRReader = ({ open, onOpenChange, onResult }: QRReaderProps) => {
           case "charge":
             // quest for charge
             if (action === "start") {
-              // start charge
-              onResult({
-                action,
-                data,
-                type,
-              })
-              onOpenChange(false)
+              if (open) {
+                // start charge
+                onResult({
+                  action,
+                  data,
+                  type,
+                })
+                onOpenChange(false)
+              }
             } else if (action === "end") {
-              // end charge
-              onResult({
-                action,
-                data,
-                type,
-              })
-              onOpenChange(false)
+              scanner?.destroy()
+              if (open) {
+                // end charge
+                onResult({
+                  action,
+                  data,
+                  type,
+                })
+                onOpenChange(false)
+              }
             } else {
               toast.error("不支持的二维码类型：" + result)
             }
@@ -95,21 +105,25 @@ const QRReader = ({ open, onOpenChange, onResult }: QRReaderProps) => {
           case "park":
             // quest for park
             if (action === "start") {
-              // start park
-              onResult({
-                action,
-                data,
-                type,
-              })
-              onOpenChange(false)
+              if (open) {
+                // start park
+                onResult({
+                  action,
+                  data,
+                  type,
+                })
+                onOpenChange(false)
+              }
             } else if (action === "end") {
-              // end park
-              onResult({
-                action,
-                data,
-                type,
-              })
-              onOpenChange(false)
+              if (open) {
+                // end park
+                onResult({
+                  action,
+                  data,
+                  type,
+                })
+                onOpenChange(false)
+              }
             } else {
               toast.error("不支持的二维码类型：" + result)
             }
