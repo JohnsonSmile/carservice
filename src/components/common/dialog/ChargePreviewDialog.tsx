@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ChargePreviewData } from "@/hooks/http/order"
 import { cn } from "@/lib/utils"
 import { Dialog } from "@radix-ui/react-dialog"
-import loadash from "lodash"
+import lodash from "lodash"
 import { Loader2 } from "lucide-react"
 import moment from "moment"
 
@@ -63,7 +63,7 @@ export const ChargePreviewDialog = ({
               ) : (
                 <span>
                   {chargePreviewData?.price
-                    ? loadash.round(chargePreviewData.price / 100, 2) + "元/度"
+                    ? lodash.round(chargePreviewData.price / 100, 2) + "元/度"
                     : "-"}
                 </span>
               )}
@@ -101,7 +101,7 @@ export const ChargePreviewDialog = ({
               ) : (
                 <span>
                   {chargePreviewData?.degree
-                    ? loadash.round(chargePreviewData.degree / 100, 2) + "度"
+                    ? lodash.round(chargePreviewData.degree / 100, 2) + "度"
                     : "-"}
                 </span>
               )}
@@ -113,7 +113,7 @@ export const ChargePreviewDialog = ({
               ) : (
                 <span>
                   {chargePreviewData?.price && chargePreviewData?.degree
-                    ? loadash.round(
+                    ? lodash.round(
                         (chargePreviewData.price * chargePreviewData.degree) /
                           10000,
                         2

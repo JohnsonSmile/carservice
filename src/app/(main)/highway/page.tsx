@@ -25,7 +25,7 @@ const HighwayPage = () => {
     hasPreviousPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["projects"],
+    queryKey: ["highways"],
     queryFn: async ({ pageParam = 1 }) => {
       const size = 5
       const res = await instance.get(

@@ -4,64 +4,68 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import { HighWayPreviewData } from "@/hooks/http/order"
+import { ParkPreviewData } from "@/hooks/http/order"
 import { cn } from "@/lib/utils"
 import { Dialog } from "@radix-ui/react-dialog"
 import lodash from "lodash"
 import { Loader2 } from "lucide-react"
 import moment from "moment"
 
-interface HighwayPreviewDialogProps {
+interface ParkPreviewDialogProps {
   isLoading: boolean
   isReqeustSending: boolean
   open: boolean
-  highwayPreviewData?: HighWayPreviewData
+  parkPreviewData?: ParkPreviewData
   error?: string
   onOpenChange: (open: boolean) => void
   confirmClick: () => void
 }
 
-export const HighwayPreviewDialog = ({
+export const ParkPreviewDialog = ({
   isLoading,
   isReqeustSending,
   open,
   onOpenChange,
-  highwayPreviewData,
+  parkPreviewData,
   error,
   confirmClick,
-}: HighwayPreviewDialogProps) => {
+}: ParkPreviewDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[368px] rounded-[15px] px-6">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold capitalize leading-[30px] text-ui-bt0">
-            <div>{"高速公路"}</div>
+            <div>{"停车"}</div>
           </DialogTitle>
         </DialogHeader>
         <div className="w-full">
-          <div className="w-full h-[280px] rounded-md mt-2 bg-white flex flex-col gap-2">
+          <div className="w-full h-[310px] rounded-md mt-2 bg-white flex flex-col gap-2">
             <div className="flex justify-between items-center">
-              <span>起始收费站:</span>
+              <span>位置:</span>
               {isLoading ? (
                 <Skeleton className="w-24 h-5" />
               ) : (
-                <span>{highwayPreviewData?.start_positon || "-"}</span>
+                <span>{parkPreviewData?.start_positon || "-"}</span>
               )}
             </div>
             <div className="flex justify-between items-center">
-              <span>结束收费站:</span>
-              {isLoading ? (
-                <Skeleton className="w-24 h-5" />
-              ) : (
-                <span>{highwayPreviewData?.end_positon || "-"}</span>
-              )}
-            </div>
-            <div className="flex justify-between items-center">
-              <span>单号:</span>
+              <span>停车场编号:</span>
               {isLoading ? (
                 <Skeleton className="w-44 h-5" />
               ) : (
-                <span>{highwayPreviewData?.order_sn || "-"}</span>
+                <span>{parkPreviewData?.order_sn || "-"}</span>
+              )}
+            </div>
+            <div className="flex justify-between items-center">
+              <span>收费标准:</span>
+              {isLoading ? (
+                <Skeleton className="w-44 h-5" />
+              ) : (
+                <span>
+                  {parkPreviewData?.price
+                    ? lodash.round(parkPreviewData.price / 100, 2) + "元/小时"
+                    : "-"}
+                </span>
               )}
             </div>
             <div className="flex justify-between items-center">
@@ -71,34 +75,48 @@ export const HighwayPreviewDialog = ({
               ) : (
                 <span
                   className={
-                    highwayPreviewData && highwayPreviewData?.status === 0
+                    parkPreviewData && parkPreviewData?.status === 0
                       ? "text-orange-400"
-                      : highwayPreviewData?.status === 1
+                      : parkPreviewData?.status === 1
                       ? "text-red-500"
-                      : highwayPreviewData?.status === 2
+                      : parkPreviewData?.status === 2
                       ? "text-green-500"
                       : "text-cyan-500"
                   }
                 >
-                  {highwayPreviewData && highwayPreviewData?.status === 0
-                    ? "行驶中"
-                    : highwayPreviewData?.status === 1
+                  {parkPreviewData && parkPreviewData?.status === 0
+                    ? "停车中"
+                    : parkPreviewData?.status === 1
                     ? "未支付"
-                    : highwayPreviewData?.status === 2
+                    : parkPreviewData?.status === 2
                     ? "已支付"
                     : "未创建"}
                 </span>
               )}
             </div>
             <div className="flex justify-between items-center">
-              <span>价格:</span>
-              {/* <span>33.50元</span> */}
+              <span>停车时间:</span>
               {isLoading ? (
-                <Skeleton className="w-24 h-5" />
+                <Skeleton className="w-44 h-5" />
               ) : (
                 <span>
-                  {highwayPreviewData?.price
-                    ? lodash.round(highwayPreviewData.price / 100, 2) + "元"
+                  {parkPreviewData?.hour
+                    ? lodash.round(parkPreviewData.hour / 100, 2) + "小时"
+                    : "-"}
+                </span>
+              )}
+            </div>
+            <div className="flex justify-between items-center">
+              <span>价格:</span>
+              {isLoading ? (
+                <Skeleton className="w-44 h-5" />
+              ) : (
+                <span>
+                  {parkPreviewData?.price && parkPreviewData?.hour
+                    ? lodash.round(
+                        (parkPreviewData.price * parkPreviewData.hour) / 10000,
+                        2
+                      ) + "元"
                     : "-"}
                 </span>
               )}
@@ -109,8 +127,8 @@ export const HighwayPreviewDialog = ({
                 <Skeleton className="w-36 h-5" />
               ) : (
                 <span>
-                  {highwayPreviewData?.start_at
-                    ? moment(highwayPreviewData.start_at).format(
+                  {parkPreviewData?.start_at
+                    ? moment(parkPreviewData.start_at).format(
                         "YYYY-MM-DD hh:mm:ss"
                       )
                     : "-"}
@@ -123,8 +141,8 @@ export const HighwayPreviewDialog = ({
                 <Skeleton className="w-36 h-5" />
               ) : (
                 <span>
-                  {highwayPreviewData?.end_at
-                    ? moment(highwayPreviewData.end_at).format(
+                  {parkPreviewData?.end_at
+                    ? moment(parkPreviewData.end_at).format(
                         "YYYY-MM-DD hh:mm:ss"
                       )
                     : "-"}
@@ -134,11 +152,11 @@ export const HighwayPreviewDialog = ({
             <div
               className={cn(
                 "mt-4 w-full text-center py-2 bg-cyan-500 text-white rounded-md flex items-center justify-center gap-1",
-                highwayPreviewData && highwayPreviewData?.status === 0
+                parkPreviewData && parkPreviewData?.status === 0
                   ? "bg-orange-400"
-                  : highwayPreviewData?.status === 1
+                  : parkPreviewData?.status === 1
                   ? "bg-green-500"
-                  : highwayPreviewData?.status === 2
+                  : parkPreviewData?.status === 2
                   ? "" // TODO: 已支付
                   : "bg-cyan-500",
                 isLoading || isReqeustSending ? "opacity-70" : ""
@@ -154,13 +172,13 @@ export const HighwayPreviewDialog = ({
                 <Loader2 className="animate-spin" />
               )}
               <div>
-                {highwayPreviewData && highwayPreviewData?.status === 0
-                  ? "下高速"
-                  : highwayPreviewData?.status === 1
+                {parkPreviewData && parkPreviewData?.status === 0
+                  ? "结束停车"
+                  : parkPreviewData?.status === 1
                   ? "使用数字人民币支付"
-                  : highwayPreviewData?.status === 2
+                  : parkPreviewData?.status === 2
                   ? "已支付"
-                  : "上高速"}
+                  : "开始停车"}
               </div>
             </div>
           </div>

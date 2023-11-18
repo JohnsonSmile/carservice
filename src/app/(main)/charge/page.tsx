@@ -8,7 +8,7 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 import moment from "moment"
 import { useEffect, useMemo } from "react"
 import { useInView } from "react-intersection-observer"
-import loadash from "lodash"
+import lodash from "lodash"
 
 const ChargePage = () => {
   const { ref, inView } = useInView()
@@ -181,7 +181,7 @@ const ChargePage = () => {
                   <span>收费标准:</span>
                   <span>
                     {order?.fee
-                      ? loadash.round(order.fee / 100, 2) + "元/度"
+                      ? lodash.round(order.fee / 100, 2) + "元/度"
                       : "-"}
                   </span>
                 </div>
@@ -211,7 +211,7 @@ const ChargePage = () => {
                   <span>消耗度数:</span>
                   <span>
                     {order.unit_count
-                      ? loadash.round(order.unit_count / 100, 2) + "度"
+                      ? lodash.round(order.unit_count / 100, 2) + "度"
                       : "-"}
                   </span>
                 </div>
@@ -219,7 +219,7 @@ const ChargePage = () => {
                   <span>价格:</span>
                   <span>
                     {order.unit_count
-                      ? loadash.round(
+                      ? lodash.round(
                           (order.unit_count * order.fee) / 10000,
                           2
                         ) + "元"

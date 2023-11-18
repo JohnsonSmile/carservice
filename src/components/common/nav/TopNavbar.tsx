@@ -9,17 +9,23 @@ import {
   ChargePreviewResponse,
   HighWayPreviewData,
   HighWayPreviewResponse,
+  ParkPreviewData,
+  ParkPreviewResponse,
   useChargePreview,
   useEndCharge,
   useEndHighway,
+  useEndPark,
   useHighWayPreview,
+  useParkPreview,
   useStartCharge,
   useStartHighway,
+  useStartPark,
 } from "@/hooks/http/order"
 import { HighwayPreviewDialog } from "../dialog/HighwayPreviewDialog"
 import { useToaster } from "../toaster/Toaster"
 import useStore from "@/store/store"
 import { ChargePreviewDialog } from "../dialog/ChargePreviewDialog"
+import { ParkPreviewDialog } from "../dialog/ParkPreviewDialog"
 
 const TopNavbar = () => {
   const router = useRouter()
@@ -206,7 +212,7 @@ const TopNavbar = () => {
   // charge status
   const isChargeLoading = isChargePreviewLoading
   const chargeError = chargePreviewError ? "获取数据失败请稍后重试" : ""
-  const isChargeReqeustSending = isChargeStartLoading // || isChargeEndLoading
+  const isChargeReqeustSending = isChargeStartLoading || isChargeEndLoading
 
   const chargeData = useMemo(() => {
     if (finalChargeData) {
@@ -214,6 +220,93 @@ const TopNavbar = () => {
     }
     return chargePreviewData
   }, [chargePreviewData, finalChargeData])
+
+  /**=========================park=========================== */
+  const [parkPreviewOpen, setParkPreviewOpen] = useState(false)
+  // 结束充电之后结束订单之前的preview data
+  const [finalParkData, setFinalParkData] = useState<ParkPreviewData>()
+
+  const handleParkPreviewSuccess = (response: ParkPreviewResponse) => {
+    if (response.code !== 200) {
+      toast.warn(response.msg)
+      setParkPreviewOpen(false)
+      return response.data
+    }
+    setParkPreviewOpen(true)
+    setShouldRefetch(true)
+    console.log({ response })
+    return response.data
+  }
+  const {
+    isPending: isParkPreviewLoading,
+    mutate: parkPreview,
+    data: parkPreviewData,
+    error: parkPreviewError,
+  } = useParkPreview({
+    onSuccess: handleParkPreviewSuccess,
+  })
+
+  // start park
+  const handleStartParkSuccess = (data: ParkPreviewData) => {
+    console.log({ data })
+    setParkPreviewOpen(false)
+    // TODO:
+    setShouldRefetch(true)
+  }
+
+  const {
+    isPending: isParkStartLoading,
+    mutate: parkStart,
+    data: parkStartData,
+    error: parkStartError,
+  } = useStartPark({ onSuccess: handleStartParkSuccess })
+
+  // end charge
+  const handleParkSuccess = (data: ParkPreviewData) => {
+    console.log({ data })
+    setShouldRefetch(true)
+    setFinalParkData(data)
+  }
+  const {
+    isPending: isParkEndLoading,
+    mutate: parkEnd,
+    data: parkEndData,
+    error: parkEndError,
+  } = useEndPark({
+    onSuccess: handleParkSuccess,
+  })
+
+  const parkConfirmClick = async () => {
+    if (parkData && parkData.status === 0) {
+      console.log({ end_id: parkData.end_id })
+      // 结束停车
+      await parkEnd({
+        id: parkData.id || 0,
+      })
+    } else if (parkData && parkData.status === 1) {
+      // 使用数字人民币支付
+      toast.warn("使用数字人民币支付")
+    } else if (parkData && parkData.status === 2) {
+      // 已支付,确认
+    } else if (parkData && parkData.status === -1) {
+      // 开始停车
+      await parkStart({ position_id: parkData.start_id })
+    } else {
+      // 出错了
+    }
+  }
+
+  // park status
+  const isParkLoading = isParkPreviewLoading
+  const parkError = parkPreviewError ? "获取数据失败请稍后重试" : ""
+  const isParkReqeustSending = isParkStartLoading || isChargeEndLoading
+
+  const parkData = useMemo(() => {
+    if (finalParkData) {
+      return finalParkData
+    }
+    return parkPreviewData
+  }, [parkPreviewData, finalParkData])
 
   /**=========================QRScanner=========================== */
   const handleClick = () => {
@@ -262,6 +355,21 @@ const TopNavbar = () => {
           })
         }
         break
+      case "park":
+        if (action === "start") {
+          router.push("/park")
+          setParkPreviewOpen(true)
+          parkPreview({
+            data,
+          })
+        } else if (action === "end") {
+          router.push("/park")
+          setParkPreviewOpen(true)
+          parkPreview({
+            data,
+          })
+        }
+        break
     }
   }
 
@@ -300,6 +408,15 @@ const TopNavbar = () => {
         chargePreviewData={chargeData}
         error={chargeError}
         confirmClick={chargeConfirmClick}
+      />
+      <ParkPreviewDialog
+        open={parkPreviewOpen}
+        onOpenChange={setParkPreviewOpen}
+        isLoading={isParkLoading}
+        isReqeustSending={isParkReqeustSending}
+        parkPreviewData={parkData}
+        error={parkError}
+        confirmClick={parkConfirmClick}
       />
     </div>
   )

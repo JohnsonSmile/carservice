@@ -301,3 +301,138 @@ export const useEndCharge = ({
     },
   })
 }
+
+export interface ParkPreviewResponse {
+  code: number
+  msg: string
+  data?: ParkPreviewData
+}
+
+export interface ParkPreviewData {
+  id?: number
+  end_at: string
+  end_positon: string
+  order_sn: string // 充电桩编号
+  price: number // fee per hour
+  hour: number // hour, 这里后台直接给个假数据就行
+  start_at: string
+  start_positon: string
+  start_id: number
+  end_id: number
+  status: number
+}
+
+export const useParkPreview = ({
+  onSuccess,
+}: {
+  onSuccess?: (response: ParkPreviewResponse) => ParkPreviewData | undefined
+}) => {
+  const toast = useToaster()
+
+  const parkPreview = async (params: HighwayPreviewRequest) => {
+    const postData = JSON.stringify(params)
+    return await instance.post<ParkPreviewResponse>("/park/preview", postData)
+  }
+
+  return useMutation({
+    mutationKey: ["park/preview"],
+    mutationFn: async (params: HighwayPreviewRequest) => {
+      const { data } = await parkPreview(params)
+      if (onSuccess) {
+        const res = onSuccess(data)
+        if (res) {
+          return res
+        } else {
+          throw "preview failed"
+        }
+      }
+      if (data.data) {
+        console.log({ data })
+        return data.data
+      }
+      // TODO: error handling
+      console.log({ data })
+      throw "preview failed"
+    },
+    onError: (err) => {
+      console.log({ err })
+      // toast.error("获取数据失败，请稍后重试")
+    },
+  })
+}
+
+// start park
+export const useStartPark = ({
+  onSuccess,
+}: {
+  onSuccess?: (data: ParkPreviewData) => void
+}) => {
+  const toast = useToaster()
+
+  const startPark = async (params: HighwayStartRequest) => {
+    const postData = JSON.stringify(params)
+    return await instance.post<ParkPreviewResponse>("/park/start", postData)
+  }
+  return useMutation({
+    mutationKey: ["park/start"],
+    mutationFn: async (params: HighwayStartRequest) => {
+      const { data } = await startPark(params)
+      if (data.data) {
+        if (onSuccess) {
+          onSuccess(data.data)
+        }
+        if (data.code !== 200) {
+          toast.warn(data.msg)
+        } else if (data.code === 200) {
+          toast.success("成功创建订单！")
+        }
+        return data?.data
+      }
+      // TODO: error handling
+      console.log({ data })
+      throw "start charge failed"
+    },
+    onError: (err) => {
+      console.log({ err })
+      // toast.error("获取数据失败，请稍后重试")
+    },
+  })
+}
+
+// end park
+export const useEndPark = ({
+  onSuccess,
+}: {
+  onSuccess?: (data: ParkPreviewData) => void
+}) => {
+  const toast = useToaster()
+
+  const endPark = async (params: ChargeEndRequest) => {
+    const postData = JSON.stringify(params)
+    return await instance.post<ParkPreviewResponse>("/park/end", postData)
+  }
+  return useMutation({
+    mutationKey: ["park/end"],
+    mutationFn: async (params: ChargeEndRequest) => {
+      const { data } = await endPark(params)
+      if (data.data) {
+        if (onSuccess) {
+          onSuccess(data.data)
+        }
+        if (data.code !== 200) {
+          toast.warn(data.msg)
+        } else if (data.code === 200) {
+          toast.success("成功结束订单！")
+        }
+        return data?.data
+      }
+      // TODO: error handling
+      console.log({ data })
+      throw "end charge failed"
+    },
+    onError: (err) => {
+      console.log({ err })
+      // toast.error("获取数据失败，请稍后重试")
+    },
+  })
+}
