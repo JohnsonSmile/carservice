@@ -8,6 +8,7 @@ interface Store {
   bio: string
   phone: string
   username: string
+  shouldRefetch: boolean
 
   setUser: (
     avatar: string,
@@ -19,6 +20,7 @@ interface Store {
   setAvatar: (avatar: string) => void
   setBio: (bio: string) => void
   setUsername: (username: string) => void
+  setShouldRefetch: (shouldRefetch: boolean) => void
   clear: () => void
 }
 
@@ -30,6 +32,7 @@ const useStore = create<Store>()(
       bio: "",
       phone: "",
       username: "",
+      shouldRefetch: false,
       setUser: (
         avatar: string,
         bio: string,
@@ -41,6 +44,8 @@ const useStore = create<Store>()(
       setBio: (bio: string) => set((state) => ({ ...state, bio })),
       setUsername: (username: string) =>
         set((state) => ({ ...state, username })),
+      setShouldRefetch: (shouldRefetch: boolean) =>
+        set((state) => ({ ...state, shouldRefetch })),
       clear: () =>
         set(() => ({
           id: undefined,
@@ -48,6 +53,7 @@ const useStore = create<Store>()(
           bio: "",
           phone: "",
           username: "",
+          shouldRefetch: false,
         })),
     }),
     {

@@ -7,9 +7,11 @@ import { useInView } from "react-intersection-observer"
 import moment from "moment"
 import { Order } from "@/hooks/http/order"
 import { cn } from "@/lib/utils"
+import useStore from "@/store/store"
 
 const HighwayPage = () => {
   const { ref, inView } = useInView()
+  const { shouldRefetch, setShouldRefetch } = useStore()
   const {
     status,
     data,
@@ -21,6 +23,7 @@ const HighwayPage = () => {
     fetchPreviousPage,
     hasNextPage,
     hasPreviousPage,
+    refetch,
   } = useInfiniteQuery({
     queryKey: ["projects"],
     queryFn: async ({ pageParam = 1 }) => {
@@ -40,6 +43,13 @@ const HighwayPage = () => {
       fetchNextPage()
     }
   }, [inView])
+
+  useEffect(() => {
+    if (shouldRefetch) {
+      refetch()
+      setShouldRefetch(false)
+    }
+  }, [shouldRefetch])
 
   const orders = useMemo(() => {
     if (!data?.pages) {
@@ -126,6 +136,16 @@ const HighwayPage = () => {
   return (
     <div className="px-6 pb-20 text-sm">
       <div>
+        {orders.length === 0 && isFetching && (
+          <div className="h-screen w-full flex items-center justify-center">
+            正在加载中...
+          </div>
+        )}
+        {orders.length === 0 && !isFetching && (
+          <div className="h-screen w-full flex items-center justify-center">
+            没有历史订单...
+          </div>
+        )}
         {/* <button
           onClick={() => fetchPreviousPage()}
           disabled={!hasPreviousPage || isFetchingPreviousPage}
@@ -217,18 +237,20 @@ const HighwayPage = () => {
             ))}
           </div>
         ))}
-        <button
-          ref={ref}
-          onClick={() => fetchNextPage()}
-          disabled={!hasNextPage || isFetchingNextPage}
-          className="w-full py-2"
-        >
-          {isFetchingNextPage
-            ? "加载更多"
-            : hasNextPage
-            ? "加载最新"
-            : "我是有底线的"}
-        </button>
+        {orders.length !== 0 && (
+          <button
+            ref={ref}
+            onClick={() => fetchNextPage()}
+            disabled={!hasNextPage || isFetchingNextPage}
+            className="w-full py-2"
+          >
+            {isFetchingNextPage
+              ? "加载更多"
+              : hasNextPage
+              ? "加载最新"
+              : "我是有底线的"}
+          </button>
+        )}
         <div>{isFetching && !isFetchingNextPage ? "更新中..." : null}</div>
       </div>
     </div>
