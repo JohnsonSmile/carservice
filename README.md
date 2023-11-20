@@ -13,6 +13,9 @@ pnpm dev
 # or
 bun dev
 ```
+
+记得修改next.config.js里面的api配置。
+
 直接部署在vercel，授权github对应分支 即可。
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

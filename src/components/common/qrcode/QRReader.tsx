@@ -164,7 +164,7 @@ const QRReader = ({ open, onOpenChange, onResult }: QRReaderProps) => {
               <video
                 id="qr-video"
                 ref={videoRef}
-                className="w-full h-full pt-11"
+                className="w-full h-screen mt-6"
               />
             </div>
           )}
