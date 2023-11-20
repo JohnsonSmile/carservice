@@ -13,18 +13,7 @@ pnpm dev
 # or
 bun dev
 ```
-
-```bash
-# Set-VMSwitch WSL -NetAdapterName Wi-Fi
-# Get-NetAdapter 找到想要switch的adapter，这里选用WLAN
-
-[wsl2]
-networkingMode=bridged
-vmSwitch=WLAN
-ipv6=true
-
-wsl --shutdown && wsl
-```
+直接部署在vercel，授权github对应分支 即可。
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
