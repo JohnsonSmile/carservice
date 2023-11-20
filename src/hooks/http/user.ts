@@ -2,7 +2,8 @@ import { useToaster } from "@/components/common/toaster/Toaster"
 import { LoginFormSchema, RegisterFormSchema } from "@/form/user"
 import instance from "@/lib/http"
 import useStore from "@/store/store"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { set } from "lodash"
 
 export const useLogin = ({ onSuccess }: { onSuccess?: () => void }) => {
   const toast = useToaster()
@@ -38,7 +39,8 @@ export const useLogin = ({ onSuccess }: { onSuccess?: () => void }) => {
             data.data.user.bio,
             data.data.user.id,
             data.data.user.phone,
-            data.data.user.username
+            data.data.user.username,
+            data.data.user.score
           )
         }
         return data?.data
@@ -109,7 +111,8 @@ export const useRegister = ({ onSuccess }: { onSuccess?: () => void }) => {
             data.data.user.bio,
             data.data.user.id,
             data.data.user.phone,
-            data.data.user.username
+            data.data.user.username,
+            data.data.user.score
           )
         }
         return data?.data
@@ -141,6 +144,83 @@ interface UserData {
       id: number
       phone: string
       username: string
+      score: number
     }
   }
+}
+
+export const useChargeScore = ({ onSuccess }: { onSuccess?: () => void }) => {
+  const toast = useToaster()
+  const toastId = "user charge"
+
+  const { setScore, score } = useStore()
+
+  const chargeScore = async (params: { score: number }) => {
+    const postData = JSON.stringify(params)
+    return await instance.post("/user/charge", postData)
+  }
+
+  return useMutation({
+    mutationKey: ["/user/charge"],
+    mutationFn: async (params: { score: number }) => {
+      toast.loading("充值中...", {
+        toastId,
+      })
+      const { data } = await chargeScore(params)
+
+      if (data.code == 200) {
+        toast.update(toastId, {
+          isLoading: false,
+          render: "充值成功.",
+          type: "success",
+          autoClose: 3000,
+          closeButton: false,
+        })
+        setScore(score + params.score)
+        return
+      }
+      throw "charge failed"
+    },
+    onSuccess: onSuccess,
+    onError: (err) => {
+      console.log({ err })
+      toast.update(toastId, {
+        isLoading: false,
+        render: "充值失败，请稍后重试",
+        type: "error",
+        autoClose: 3000,
+        closeButton: false,
+      })
+    },
+  })
+}
+
+export const useGetUserInfo = ({ onSuccess }: { onSuccess?: () => void }) => {
+  const { setUser } = useStore()
+  return useQuery({
+    queryKey: ["/user/info"],
+    staleTime: 3_000,
+    queryFn: async () => {
+      const res = await instance.get("/user/info")
+      console.log(res.data.data)
+      if (
+        res.data.code === 200 &&
+        res.data.code === 200 &&
+        res.data.data &&
+        res.data.data.user
+      ) {
+        const { avatar, bio, id, phone, score, username } = res.data.data.user
+        console.log(avatar, bio, id, phone, score, username)
+        setUser(
+          avatar || "",
+          bio || "",
+          id || 0,
+          phone || 0,
+          username || "",
+          score || 0
+        )
+      }
+      return res.data
+    },
+  })
 }

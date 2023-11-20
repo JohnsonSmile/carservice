@@ -1,6 +1,6 @@
 "use client"
 
-import { Order } from "@/hooks/http/order"
+import { Order, usePayOrder } from "@/hooks/http/order"
 import instance from "@/lib/http"
 import useStore from "@/store/store"
 import { useInfiniteQuery } from "@tanstack/react-query"
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
 
 const ParkPage = () => {
   const { ref, inView } = useInView()
-  const { shouldRefetch, setShouldRefetch } = useStore()
+  const { shouldRefetch, setShouldRefetch, setScanOpen } = useStore()
   const {
     status,
     data,
@@ -28,7 +28,7 @@ const ParkPage = () => {
   } = useInfiniteQuery({
     queryKey: ["parks"],
     queryFn: async ({ pageParam = 1 }) => {
-      const size = 5
+      const size = 100
       const res = await instance.get(
         `/park/orders?page=${pageParam}&size=${size}`
       )
@@ -121,19 +121,38 @@ const ParkPage = () => {
     return result
   }, [data])
 
-  console.log({ orders })
+  // payorder
+  const handlePaySuccess = () => {
+    setShouldRefetch(true)
+  }
+  const {
+    isPending: isPayLoading,
+    mutate: payOrder,
+    data: payData,
+    error: payError,
+  } = usePayOrder({
+    onSuccess: handlePaySuccess,
+  })
 
-  const handleClick = (order_status: number) => {
+  const handleClick = async (order_status: number, order_id: number) => {
     if (order_status === 2) {
       // order_status === 2 payed
       // 已经支付了，就不做任何响应
       return
     }
-    // order_status === 0 start
-    // 点击打开二维码，来end当前order
+    if (order_status === 0) {
+      // order_status === 0 start
+      // 点击打开二维码，来end当前order
+      setScanOpen(true)
+      return
+    }
 
-    // order_status === 1 end
-    // 点击来支付当前order
+    if (order_status === 1) {
+      // order_status === 1 end
+      // 点击来支付当前order
+      await payOrder({ id: order_id })
+      return
+    }
   }
   console.log({ orders })
   return (
@@ -245,7 +264,7 @@ const ParkPage = () => {
                       "cursor-pointer": order.order_status !== 2,
                     }
                   )}
-                  onClick={() => handleClick(order.order_status)}
+                  onClick={() => handleClick(order.order_status, order.id)}
                 >
                   {
                     order.order_status === 0

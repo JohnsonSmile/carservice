@@ -36,10 +36,20 @@ instance.interceptors.response.use(
   (response) => {
     // Modify the response data here
     console.log({ response })
+    if (response && response.data && response.data.code === 1003) {
+      window.location.href = "/login"
+      localStorage?.removeItem("car-token")
+      return Promise.reject("登录失效")
+    }
 
     return response
   },
   (error) => {
+    console.log({ error: error })
+    if (error.response && error.response.status === 401) {
+      localStorage?.removeItem("car-token")
+      window.location.href = "/login"
+    }
     // Handle response errors here
     return Promise.reject(error)
   }

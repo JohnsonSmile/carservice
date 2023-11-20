@@ -73,6 +73,7 @@ export interface HighWayPreviewResponse {
 }
 
 export interface HighWayPreviewData {
+  id: number
   end_at: string
   end_positon: string
   order_sn: string
@@ -171,7 +172,7 @@ export interface ChargePreviewResponse {
 }
 
 export interface ChargePreviewData {
-  id?: number
+  id: number
   end_at: string
   end_positon: string
   order_sn: string // 充电桩编号
@@ -309,7 +310,7 @@ export interface ParkPreviewResponse {
 }
 
 export interface ParkPreviewData {
-  id?: number
+  id: number
   end_at: string
   end_positon: string
   order_sn: string // 充电桩编号
@@ -426,6 +427,40 @@ export const useEndPark = ({
         }
         return data?.data
       }
+      // TODO: error handling
+      console.log({ data })
+      throw "end charge failed"
+    },
+    onError: (err) => {
+      console.log({ err })
+      // toast.error("获取数据失败，请稍后重试")
+    },
+  })
+}
+
+export interface ParkOrderResponse {
+  code: number
+  msg: string
+}
+
+export const usePayOrder = ({ onSuccess }: { onSuccess?: () => void }) => {
+  const toast = useToaster()
+  const payOrder = async (params: ChargeEndRequest) => {
+    const postData = JSON.stringify(params)
+    return await instance.post<ParkOrderResponse>("/order/pay", postData)
+  }
+  return useMutation({
+    mutationKey: ["/order/pay"],
+    mutationFn: async (params: ChargeEndRequest) => {
+      const { data } = await payOrder(params)
+      if (data.code === 200) {
+        if (onSuccess) {
+          onSuccess()
+        }
+        toast.success("支付成功！")
+        return
+      }
+      toast.error(data.msg)
       // TODO: error handling
       console.log({ data })
       throw "end charge failed"

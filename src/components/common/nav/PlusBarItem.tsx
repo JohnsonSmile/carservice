@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import PlusIcon from "../icon/Plus"
 import QRReader from "../qrcode/QRReader"
-import { usePathname, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import useStore from "@/store/store"
 import { useToaster } from "../toaster/Toaster"
 import {
@@ -19,6 +19,7 @@ import {
   useEndPark,
   useHighWayPreview,
   useParkPreview,
+  usePayOrder,
   useStartCharge,
   useStartHighway,
   useStartPark,
@@ -29,10 +30,8 @@ import { ParkPreviewDialog } from "../dialog/ParkPreviewDialog"
 
 const PlusBarItem = () => {
   const router = useRouter()
-  const { setShouldRefetch } = useStore()
+  const { setShouldRefetch, scanOpen, setScanOpen } = useStore()
   const toast = useToaster()
-
-  const [scanOpen, setScanOpen] = useState(false)
 
   /**=========================highway=========================== */
   const [highwayPreviewOpen, setHighwayPreviewOpen] = useState(false)
@@ -88,6 +87,25 @@ const PlusBarItem = () => {
     onSuccess: handleEndHighwaySuccess,
   })
 
+  // payorder
+  const handlePaySuccess = () => {
+    setShouldRefetch(true)
+    setFinalHighwayData(undefined)
+    setFinalParkData(undefined)
+    setFinalChargeData(undefined)
+    setHighwayPreviewOpen(false)
+    setParkPreviewOpen(false)
+    setChargePreviewOpen(false)
+  }
+  const {
+    isPending: isPayLoading,
+    mutate: payOrder,
+    data: payData,
+    error: payError,
+  } = usePayOrder({
+    onSuccess: handlePaySuccess,
+  })
+
   const highwayConfirmClick = async () => {
     if (highwayData && highwayData.status === 0) {
       console.log({ end_id: highwayData.end_id })
@@ -98,7 +116,7 @@ const PlusBarItem = () => {
       })
     } else if (highwayData && highwayData.status === 1) {
       // 使用数字人民币支付
-      toast.warn("使用数字人民币支付")
+      await payOrder({ id: highwayData.id })
     } else if (highwayData && highwayData.status === 2) {
       // 已支付,确认
     } else if (highwayData && highwayData.status === -1) {
@@ -185,7 +203,7 @@ const PlusBarItem = () => {
       })
     } else if (chargeData && chargeData.status === 1) {
       // 使用数字人民币支付
-      toast.warn("使用数字人民币支付")
+      await payOrder({ id: chargeData.id })
     } else if (chargeData && chargeData.status === 2) {
       // 已支付,确认
     } else if (chargeData && chargeData.status === -1) {
@@ -272,7 +290,7 @@ const PlusBarItem = () => {
       })
     } else if (parkData && parkData.status === 1) {
       // 使用数字人民币支付
-      toast.warn("使用数字人民币支付")
+      await payOrder({ id: parkData.id })
     } else if (parkData && parkData.status === 2) {
       // 已支付,确认
     } else if (parkData && parkData.status === -1) {
@@ -286,7 +304,8 @@ const PlusBarItem = () => {
   // park status
   const isParkLoading = isParkPreviewLoading
   const parkError = parkPreviewError ? "获取数据失败请稍后重试" : ""
-  const isParkReqeustSending = isParkStartLoading || isChargeEndLoading
+  const isParkReqeustSending =
+    isParkStartLoading || isChargeEndLoading || isPayLoading
 
   const parkData = useMemo(() => {
     if (finalParkData) {
