@@ -156,17 +156,15 @@ const QRReader = ({ open, onOpenChange, onResult }: QRReaderProps) => {
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="w-screen min-h-screen px-0"
+          className="w-screen pt-11 px-0"
           onCancel={() => onOpenChange(false)}
         >
           {!data && (
-            <div className="">
-              <video
-                id="qr-video"
-                ref={videoRef}
-                className="w-full h-screen mt-6"
-              />
-            </div>
+            <video
+              id="qr-video"
+              ref={videoRef}
+              className="w-full h-full"
+            />
           )}
         </DialogContent>
       </Dialog>
